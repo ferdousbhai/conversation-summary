@@ -6,21 +6,27 @@ export interface Message {
   content: string;
 }
 
+export interface summarizeConversationOptions {
+  context?: string;
+  model?: string;
+  temperature?: number;
+}
+
 export async function summarizeConversation(
   messages: Message[],
-  previousSummary?: string,
+  options?: summarizeConversationOptions,
 ): Promise<string> {
   // Summarize conversation
   let systemPrompt =
-    "You are capable of summarizing conversations minimizing any loss of information.\n\n";
-  systemPrompt += previousSummary
-    ? `Summarize the following conversation, providing lots of specific details from its context.\n\nContext:\n${previousSummary}\n\nConversation:\n`
+    "You are a chat assistant capable of summarizing conversations, keeping all the details.\n\n";
+  systemPrompt += options?.context
+    ? `You are given a context and a conversation that follows. Write a paragraph summarizing the context and the conversation. Start by repeating the context. Be concise.\n\nContext:\n${options.context}\n\nConversation:\n`
     : "Summarize the following conversation.";
 
   try {
     const chatCompletion = await openAI.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      temperature: 0.6,
+      model: options?.model || "gpt-3.5-turbo",
+      temperature: options?.temperature || 0.1,
       messages: [
         { role: "system", content: systemPrompt },
         ...messages,
